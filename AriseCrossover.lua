@@ -5,7 +5,7 @@
 --]]
 
 -- Remplace par tes informations GitHub
-local GITHUB_USER = "MON_PSEUDO"
+local GITHUB_USER = "Ins12663"
 local GITHUB_REPO = "MON_REPO"
 local BRANCH = "main"
 
@@ -48,9 +48,9 @@ loadModule("features/teleport.lua")(UI, Config)
 loadModule("features/autofarm.lua")(UI, Config)
 
 -- Optionnel : ajouter le footer
-UI:AddFooter("Made by [TON NOM] | Inspired by GoombaHub")
+UI:AddFooter("Made by Ins12663")
 
 -- Rendre l'UI visible au lancement
 UI:SetVisible(true)
 
-print("Arise Crossover Hub chargé avec succès !")
+print("Ins12663 Hub chargé avec succès !")
