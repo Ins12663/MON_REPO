@@ -7,7 +7,7 @@ local Config = {}
 
 -- Paramètres de l'Interface Utilisateur (UI)
 Config.UI = {
-    Title = "⚙️ ARISE TP HUB",
+    Title = "⚙️ Ins12663 HUB",
     ToggleKey = Enum.KeyCode.K, -- Touche pour montrer/cacher l'UI
     Position = UDim2.new(0.5, -200, 0.5, -200), -- Position de départ
     Size = UDim2.new(0, 350, 0, 400), -- Taille de la fenêtre principale
