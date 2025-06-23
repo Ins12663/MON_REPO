@@ -1,7 +1,6 @@
---[[
-    Module UI
-    Gère la création, l'affichage et les interactions de l'interface graphique.
---]]
+-- =================================================================
+-- FICHIER core/ui.lua - VERSION CORRIGÉE - 23/06/2025
+-- =================================================================
 
 -- Supprime l'ancienne UI si elle existe pour le rechargement
 if game.Players.LocalPlayer:FindFirstChild("PlayerGui") and game.Players.LocalPlayer.PlayerGui:FindFirstChild("AriseHubUI") then
@@ -11,23 +10,23 @@ end
 local UI = {}
 local UserInputService = game:GetService("UserInputService")
 
--- Variables locales pour l'état de l'UI
 local mainFrame, titleBar, contentFrame, footerLabel
 local isDragging = false
 local dragStart
 local startPos
-
 local isMinimized = false
 local originalSize
 
 function UI:Init(config)
+    -- Stocker la configuration pour une utilisation ultérieure dans ce module
+    UI.Config = config
+
     local screenGui = Instance.new("ScreenGui")
     screenGui.Name = "AriseHubUI"
     screenGui.Parent = game.Players.LocalPlayer:FindFirstChild("PlayerGui") or game.Players.LocalPlayer:WaitForChild("PlayerGui")
     screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Global
-    screenGui.ResetOnSpawn = false -- Pour ne pas la réinitialiser à la mort du joueur
+    screenGui.ResetOnSpawn = false
 
-    -- Effet de fondu (fade-in)
     screenGui.Enabled = true
     
     mainFrame = Instance.new("Frame")
@@ -38,7 +37,7 @@ function UI:Init(config)
     mainFrame.BackgroundTransparency = config.Transparency
     mainFrame.BorderSizePixel = 0
     mainFrame.Parent = screenGui
-    mainFrame.Visible = false -- Caché au début pour l'effet de fade-in
+    mainFrame.Visible = false
     mainFrame.ClipsDescendants = true
 
     originalSize = mainFrame.Size
@@ -49,7 +48,7 @@ function UI:Init(config)
     
     local shadow = Instance.new("ImageLabel")
     shadow.Name = "Shadow"
-    shadow.Image = "rbxassetid://10636353942" -- Ombre portée simple
+    shadow.Image = "rbxassetid://10636353942"
     shadow.ImageColor3 = Color3.new(0,0,0)
     shadow.BackgroundTransparency = 1
     shadow.SliceCenter = Rect.new(49, 49, 50, 50)
@@ -59,7 +58,6 @@ function UI:Init(config)
     shadow.ZIndex = 0
     shadow.Parent = mainFrame
 
-    -- Barre de titre
     titleBar = Instance.new("Frame")
     titleBar.Name = "TitleBar"
     titleBar.Size = UDim2.new(1, 0, 0, 35)
@@ -80,7 +78,6 @@ function UI:Init(config)
     titleLabel.TextXAlignment = Enum.TextXAlignment.Left
     titleLabel.Parent = titleBar
     
-    -- Boutons de contrôle (Fermer, Réduire)
     local closeButton = Instance.new("TextButton")
     closeButton.Name = "CloseButton"
     closeButton.Text = "X"
@@ -107,21 +104,18 @@ function UI:Init(config)
     minimizeButton.Parent = titleBar
     minimizeButton.MouseButton1Click:Connect(function()
         isMinimized = not isMinimized
+        contentFrame.Visible = not isMinimized
+        footerLabel.Visible = not isMinimized
         if isMinimized then
-            mainFrame.Size = UDim2.new(0, mainFrame.AbsoluteSize.X, 0, titleBar.AbsoluteSize.Y)
-            contentFrame.Visible = false
-            footerLabel.Visible = false
+            mainFrame:TweenSize(UDim2.new(0, mainFrame.AbsoluteSize.X, 0, titleBar.AbsoluteSize.Y), "Out", "Quad", 0.2, true)
         else
-            mainFrame.Size = originalSize
-            contentFrame.Visible = true
-            footerLabel.Visible = true
+            mainFrame:TweenSize(originalSize, "Out", "Quad", 0.2, true)
         end
     end)
     
-    -- Zone de contenu scrollable
     contentFrame = Instance.new("ScrollingFrame")
     contentFrame.Name = "ContentFrame"
-    contentFrame.Size = UDim2.new(1, -20, 1, -55)
+    contentFrame.Size = UDim2.new(1, -20, 1, -65) -- Espace pour header et footer
     contentFrame.Position = UDim2.new(0, 10, 0, 45)
     contentFrame.BackgroundTransparency = 1
     contentFrame.BorderSizePixel = 0
@@ -134,17 +128,13 @@ function UI:Init(config)
     listLayout.SortOrder = Enum.SortOrder.LayoutOrder
     listLayout.Parent = contentFrame
 
-    -- Logique du Drag & Drop
     titleBar.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
             isDragging = true
             dragStart = input.Position
             startPos = mainFrame.Position
-            
             input.Changed:Connect(function()
-                if input.UserInputState == Enum.UserInputState.End then
-                    isDragging = false
-                end
+                if input.UserInputState == Enum.UserInputState.End then isDragging = false end
             end)
         end
     end)
@@ -156,18 +146,16 @@ function UI:Init(config)
         end
     end)
 
-    -- Logique pour montrer/cacher l'UI
     UserInputService.InputBegan:Connect(function(input, gameProcessedEvent)
         if not gameProcessedEvent and input.KeyCode == config.ToggleKey then
             mainFrame.Visible = not mainFrame.Visible
         end
     end)
 
-    -- Footer
     footerLabel = Instance.new("TextLabel")
     footerLabel.Name = "Footer"
-    footerLabel.Size = UDim2.new(1, 0, 0, 15)
-    footerLabel.Position = UDim2.new(0, 0, 1, -15)
+    footerLabel.Size = UDim2.new(1, 0, 0, 20)
+    footerLabel.Position = UDim2.new(0, 0, 1, -20)
     footerLabel.BackgroundColor3 = config.Colors.TitleBar
     footerLabel.BackgroundTransparency = 0.5
     footerLabel.BorderSizePixel = 0
@@ -176,7 +164,6 @@ function UI:Init(config)
     footerLabel.TextColor3 = config.Colors.Text
     footerLabel.ZIndex = 2
     footerLabel.Parent = mainFrame
-
 end
 
 function UI:SetVisible(visible)
@@ -191,14 +178,14 @@ function UI:AddFooter(text)
     end
 end
 
--- Fonction pour créer une section (catégorie)
 function UI:CreateSection(title, order)
-    local config = require(script.Parent.Parent.config)
+    -- On utilise la config stockée dans UI.Config au lieu de require()
+    local config = UI.Config.UI 
     
     local sectionFrame = Instance.new("Frame")
     sectionFrame.Name = title .. "Section"
     sectionFrame.BackgroundTransparency = 1
-    sectionFrame.Size = UDim2.new(1, 0, 0, 30) -- Taille initiale juste pour le header
+    sectionFrame.Size = UDim2.new(1, 0, 0, 30)
     sectionFrame.LayoutOrder = order
     sectionFrame.ClipsDescendants = true
     sectionFrame.Parent = contentFrame
@@ -208,8 +195,8 @@ function UI:CreateSection(title, order)
     headerButton.Text = "  " .. title .. " ▼"
     headerButton.Font = Enum.Font.SourceSansBold
     headerButton.TextSize = 16
-    headerButton.TextColor3 = config.UI.Colors.Text
-    headerButton.BackgroundColor3 = config.UI.Colors.Background
+    headerButton.TextColor3 = config.Colors.Text
+    headerButton.BackgroundColor3 = config.Colors.Background
     headerButton.Size = UDim2.new(1, 0, 0, 30)
     headerButton.TextXAlignment = Enum.TextXAlignment.Left
     headerButton.Parent = sectionFrame
@@ -221,22 +208,22 @@ function UI:CreateSection(title, order)
     local itemFrame = Instance.new("Frame")
     itemFrame.Name = "Items"
     itemFrame.BackgroundTransparency = 1
-    itemFrame.Size = UDim2.new(1, 0, 0, 0) -- Taille initiale de 0
+    itemFrame.Size = UDim2.new(1, 0, 0, 0)
     itemFrame.Position = UDim2.new(0,0,0,30)
     itemFrame.Parent = sectionFrame
 
     local listLayout = Instance.new("UIListLayout")
     listLayout.Padding = UDim.new(0, 5)
+    listLayout.VerticalAlignment = Enum.VerticalAlignment.Top
     listLayout.Parent = itemFrame
 
     local isExpanded = false
     
     headerButton.MouseButton1Click:Connect(function()
         isExpanded = not isExpanded
-        local targetSize = #itemFrame:GetChildren() > 1 and (#itemFrame:GetChildren() - 1) * 35 + 5 or 0 -- 35px par item
-        
-        local itemsTargetSize = UDim2.new(1, 0, 0, targetSize)
-        local frameTargetSize = UDim2.new(1, 0, 0, 30 + targetSize + 5)
+        local contentHeight = listLayout.AbsoluteContentSize.Y
+        local itemsTargetSize = UDim2.new(1, 0, 0, contentHeight)
+        local frameTargetSize = UDim2.new(1, 0, 0, 30 + contentHeight + 5)
 
         if isExpanded then
             headerButton.Text = "  " .. title .. " ▲"
@@ -249,20 +236,20 @@ function UI:CreateSection(title, order)
         end
     end)
     
-    return itemFrame -- On retourne le conteneur pour y ajouter des boutons
+    return itemFrame
 end
 
--- Fonction pour créer un bouton dans une section
 function UI:CreateButton(parent, text, callback)
-    local config = require(script.Parent.Parent.config)
+    -- On utilise la config stockée dans UI.Config au lieu de require()
+    local config = UI.Config.UI
     
     local button = Instance.new("TextButton")
     button.Name = text
     button.Text = text
     button.Font = Enum.Font.SourceSans
     button.TextSize = 14
-    button.TextColor3 = config.UI.Colors.Text
-    button.BackgroundColor3 = config.UI.Colors.Primary
+    button.TextColor3 = config.Colors.Text
+    button.BackgroundColor3 = config.Colors.Primary
     button.Size = UDim2.new(1, 0, 0, 30)
     button.Parent = parent
     
@@ -271,10 +258,10 @@ function UI:CreateButton(parent, text, callback)
     corner.Parent = button
 
     button.MouseEnter:Connect(function()
-        game:GetService("TweenService"):Create(button, TweenInfo.new(0.1), {BackgroundColor3 = config.UI.Colors.Hover}):Play()
+        game:GetService("TweenService"):Create(button, TweenInfo.new(0.1), {BackgroundColor3 = config.Colors.Hover}):Play()
     end)
     button.MouseLeave:Connect(function()
-        game:GetService("TweenService"):Create(button, TweenInfo.new(0.1), {BackgroundColor3 = config.UI.Colors.Primary}):Play()
+        game:GetService("TweenService"):Create(button, TweenInfo.new(0.1), {BackgroundColor3 = config.Colors.Primary}):Play()
     end)
     
     if callback then
