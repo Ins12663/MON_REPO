@@ -14,32 +14,42 @@ return function(UI, Config)
     
     local farmButton = UI:CreateButton(farmSection, "Activer AutoFarm", nil)
 
-    local function findNearestEnemy()
-        local character = Player.Character
-        if not character or not character:FindFirstChild("HumanoidRootPart") then return nil end
+local function findNearestEnemy()
+    local character = Player.Character
+    if not character or not character:FindFirstChild("HumanoidRootPart") then return nil end
 
-        local playerPos = character.HumanoidRootPart.Position
-        local nearestDist = Config.AutoFarm.AttackDistance
-        local nearestEnemy = nil
+    local playerPos = character.HumanoidRootPart.Position
+    local nearestDist = Config.AutoFarm.AttackDistance
+    local nearestEnemy = nil
 
-        -- ⚠️ Assure-toi que le chemin vers le dossier des mobs est correct dans config.lua
-        local mobFolder = game.Workspace:FindFirstChild(Config.AutoFarm.MobFolderPath.Name)
+    -- NOUVELLE LOGIQUE POUR TROUVER LE DOSSIER DE MANIÈRE SÉCURISÉE
+    local mobFolder = game.Workspace
+    for _, folderName in ipairs(Config.AutoFarm.MobFolderPath) do
+        -- On utilise WaitForChild pour attendre que le dossier soit créé par le jeu (jusqu'à 5 secondes)
+        mobFolder = mobFolder:WaitForChild(folderName, 5) 
         if not mobFolder then
-             warn("Dossier des mobs non trouvé: " .. Config.AutoFarm.MobFolderPath.Name)
-             return nil
+            warn("Dossier des mobs non trouvé, chemin invalide à l'étape : " .. folderName)
+            return nil
         end
+    end
+    -- À ce stade, mobFolder est le bon dossier _Enemies, trouvé en toute sécurité.
 
-        for _, enemy in ipairs(mobFolder:GetChildren()) do
-            if enemy:FindFirstChild("Humanoid") and enemy:FindFirstChild("HumanoidRootPart") and enemy.Humanoid.Health > 0 then
-                local dist = (playerPos - enemy.HumanoidRootPart.Position).Magnitude
-                if dist < nearestDist then
-                    nearestDist = dist
-                    nearestEnemy = enemy
-                end
+    if not mobFolder then
+         warn("Le chemin des mobs est introuvable après attente.")
+         return nil
+    end
+
+    for _, enemy in ipairs(mobFolder:GetChildren()) do
+        if enemy:FindFirstChild("Humanoid") and enemy:FindFirstChild("HumanoidRootPart") and enemy.Humanoid.Health > 0 then
+            local dist = (playerPos - enemy.HumanoidRootPart.Position).Magnitude
+            if dist < nearestDist then
+                nearestDist = dist
+                nearestEnemy = enemy
             end
         end
-        return nearestEnemy
     end
+    return nearestEnemy
+end
 
     local function farmLoop()
         local enemy = findNearestEnemy()
