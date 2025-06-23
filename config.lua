@@ -41,7 +41,7 @@ Config.AutoFarm = {
     AttackDistance = 50, -- Distance en studs pour détecter les ennemis
     LoopDelay = 0.5, -- Temps en secondes entre chaque recherche d'ennemi
     -- ⚠️ IMPORTANT: Tu devras trouver le nom du dossier où sont les mobs dans le jeu !
-    MobFolderPath = game.Workspace.Mobs -- EXEMPLE, à adapter !
+    MobFolderPath = game.Workspace._Client._Enemies -- EXEMPLE, à adapter !
 }
 
 return Config
